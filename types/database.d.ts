@@ -56,3 +56,40 @@ export interface Event {
   created_at: string
 }
 
+export interface Admin {
+  admin_id: number
+  name: string
+  email: string
+  password_hash: string
+  created_at: string
+}
+
+export interface Parking {
+  parking_id: number
+  resident_id: number
+  spot_number: string
+  booking_date: string
+  status: "Available" | "Booked" | "Maintenance"
+  created_at: string
+  resident_name?: string
+}
+
+export interface Facility {
+  facility_id: number
+  resident_id: number
+  facility_name: string
+  booking_date: string
+  status: "Available" | "Booked" | "Maintenance"
+  created_at: string
+  resident_name?: string
+}
+
+export interface InfrastructureMaintenance {
+  maintenance_id: number
+  admin_id: number
+  description: string
+  status: "Pending" | "In Progress" | "Completed"
+  created_at: string
+  admin_name?: string
+}
+

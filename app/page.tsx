@@ -17,7 +17,7 @@ export default function Home() {
           <div className="flex flex-1 items-center justify-end space-x-4">
             <nav className="flex items-center space-x-2">
               <Link href="/login">
-                <Button variant="outline">Login</Button>
+                <Button>Login</Button>
               </Link>
               <Link href="/register">
                 <Button>Register</Button>
@@ -42,12 +42,12 @@ export default function Home() {
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
                   <Link href="/register">
-                    <Button size="lg" className="w-full">
+                    <Button>
                       Get Started
                     </Button>
                   </Link>
                   <Link href="/login">
-                    <Button size="lg" variant="outline" className="w-full">
+                    <Button>
                       Login
                     </Button>
                   </Link>

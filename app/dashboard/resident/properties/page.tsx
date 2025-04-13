@@ -1,9 +1,7 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useEffect } from "react"
-import { Button, type ButtonProps } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Dialog,
@@ -18,6 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Building, Plus } from "lucide-react"
+import { useSession } from "next-auth/react"
 
 interface Property {
   property_id: number
@@ -31,40 +30,60 @@ export default function ResidentProperties() {
   const [isLoading, setIsLoading] = useState(true)
   const [open, setOpen] = useState(false)
 
-  // Mock data for demonstration
+  const { data: session, status } = useSession()
+
   useEffect(() => {
-    // In a real app, you would fetch from your API
-    const timer = setTimeout(() => {
+    if (status !== "authenticated") return
+
+    const fetchProperties = async () => {
       try {
-        setProperties([
-          {
-            property_id: 1,
-            address: "123 Main St, Apt 4B",
-            property_type: "Apartment",
-            created_at: "2023-01-15T00:00:00Z",
-          },
-          {
-            property_id: 2,
-            address: "456 Park Ave",
-            property_type: "House",
-            created_at: "2023-03-22T00:00:00Z",
-          },
-        ])
-        setIsLoading(false)
+        const response = await fetch(`/api/properties?residentId=${session.user.id}`)
+        const data = await response.json()
+
+        if (Array.isArray(data)) {
+          setProperties(data)
+        } else {
+          console.error("API did not return an array:", data)
+          setProperties([])
+        }
       } catch (error) {
-        console.error("Error setting properties:", error)
+        console.error("Failed to fetch properties:", error)
+        setProperties([])
+      } finally {
         setIsLoading(false)
       }
-    }, 1000)
+    }
 
-    return () => clearTimeout(timer)
-  }, [])
+    fetchProperties()
+  }, [session, status])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      // In a real app, you would submit to your API
-      setOpen(false)
+      const form = new FormData(e.target as HTMLFormElement)
+      const newProperty = {
+        address: form.get("address"),
+        property_type: form.get("property_type"),
+        proof: form.get("proof") as File, // Handling file input
+      }
+
+      const formData = new FormData()
+      formData.append("address", newProperty.address as string)
+      formData.append("property_type", newProperty.property_type as string)
+      formData.append("proof", newProperty.proof)
+
+      const res = await fetch("/api/properties", {
+        method: "POST",
+        body: formData, // Sending FormData
+      })
+
+      if (res.ok) {
+        const saved = await res.json()
+        setProperties((prev) => [...prev, saved])
+        setOpen(false)
+      } else {
+        console.error("Error saving property:", await res.text())
+      }
     } catch (error) {
       console.error("Error submitting form:", error)
     }
@@ -92,12 +111,12 @@ export default function ResidentProperties() {
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
                   <Label htmlFor="address">Property Address</Label>
-                  <Input id="address" placeholder="123 Main St, Apt 4B" required />
+                  <Input id="address" name="address" placeholder="123 Main St, Apt 4B" required />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="property-type">Property Type</Label>
-                  <Select defaultValue="Apartment">
-                    <SelectTrigger id="property-type">
+                  <Label htmlFor="property_type">Property Type</Label>
+                  <Select name="property_type" defaultValue="Apartment">
+                    <SelectTrigger id="property_type">
                       <SelectValue placeholder="Select property type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -109,7 +128,7 @@ export default function ResidentProperties() {
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="proof">Proof of Ownership</Label>
-                  <Input id="proof" type="file" />
+                  <Input id="proof" name="proof" type="file" required />
                 </div>
               </div>
               <DialogFooter>
@@ -151,12 +170,8 @@ export default function ResidentProperties() {
                 </p>
               </CardContent>
               <CardFooter className="flex justify-between">
-                <Button>
-                  View Details
-                </Button>
-                <Button>
-                  Edit
-                </Button>
+                <Button>View Details</Button>
+                <Button>Edit</Button>
               </CardFooter>
             </Card>
           ))}
@@ -165,4 +180,3 @@ export default function ResidentProperties() {
     </div>
   )
 }
-

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { getProperties, getPropertiesByResidentId } from "@/lib/db"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
+import { useSession } from "next-auth/react"
+
 
 export async function GET(request: Request) {
   try {
